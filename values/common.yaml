@@ -1,0 +1,5 @@
+global:
+
+  imagePullPolicy: IfNotPresent
+
+  priorityClassName: system-cluster-critical
