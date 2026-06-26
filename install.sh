@@ -1,16 +1,23 @@
 #!/usr/bin/env bash
+
 set -euo pipefail
 
 source config.env
+source scripts/lib/common.sh
 
-echo "== Kubernetes Bootstrap =="
+require_root
 
-for script in scripts/*.sh; do
-    echo ">>> $(basename "$script")"
+log_info "Starte Kubernetes Bootstrap..."
+
+for script in scripts/*.sh
+do
+
+    [[ "$script" == *"lib"* ]] && continue
+
+    log_info "Starte $(basename "$script")"
+
     bash "$script"
+
 done
 
-echo ""
-echo "=================================="
-echo " Bootstrap abgeschlossen"
-echo "=================================="
+log_ok "Bootstrap abgeschlossen."
