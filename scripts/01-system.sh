@@ -56,8 +56,21 @@ sysctl --system >/dev/null
 # Zeit synchronisieren
 ####################################
 
-systemctl enable systemd-timesyncd
-systemctl restart systemd-timesyncd
+####################################
+# Zeit synchronisieren
+####################################
+
+if systemctl list-unit-files | grep -q "^systemd-timesyncd.service"; then
+    systemctl enable systemd-timesyncd
+    systemctl restart systemd-timesyncd
+    log_ok "systemd-timesyncd aktiviert."
+elif systemctl list-unit-files | grep -q "^chrony.service"; then
+    systemctl enable chrony
+    systemctl restart chrony
+    log_ok "chrony aktiviert."
+else
+    log_warn "Kein Zeitdienst gefunden. Überspringe."
+fi
 
 ####################################
 # Firewall
