@@ -46,8 +46,8 @@ if [[ "${INSTALL_HELM}" == "true" ]]; then
     run_script "05-helm.sh"
 fi
 
-if [[ "${INSTALL_CILIUM}" == "true" ]]; then
-    run_script "06-cilium.sh"
+if [[ "${INSTALL_FLANNEL}" == "true" ]]; then
+    run_script "06-flannel.sh"
 fi
 
 if [[ "${INSTALL_INGRESS}" == "true" ]]; then
