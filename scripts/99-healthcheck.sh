@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -Eeuo pipefail
+set -Euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -19,15 +19,15 @@ print_result() {
     case "$STATUS" in
         OK)
             echo -e "\033[32m[ OK ]\033[0m ${NAME}"
-            ((PASS++))
+            PASS=$((PASS + 1))
             ;;
         WARN)
             echo -e "\033[33m[WARN]\033[0m ${NAME}"
-            ((WARN++))
+            WARN=$((WARN + 1))
             ;;
         FAIL)
             echo -e "\033[31m[FAIL]\033[0m ${NAME}"
-            ((FAIL++))
+            FAIL=$((FAIL + 1))
             ;;
     esac
 }
@@ -108,23 +108,27 @@ else
 fi
 
 ############################################################
-# Cilium
+# Flannel
 ############################################################
 
-if helm status cilium -n kube-system >/dev/null 2>&1; then
-    print_result OK "Cilium"
+if kubectl get daemonset kube-flannel-ds -n kube-flannel >/dev/null 2>&1; then
+
+    READY=$(kubectl get daemonset kube-flannel-ds \
+        -n kube-flannel \
+        -o jsonpath='{.status.numberReady}')
+
+    DESIRED=$(kubectl get daemonset kube-flannel-ds \
+        -n kube-flannel \
+        -o jsonpath='{.status.desiredNumberScheduled}')
+
+    if [[ "$READY" == "$DESIRED" ]]; then
+        print_result OK "Flannel"
+    else
+        print_result FAIL "Flannel"
+    fi
+
 else
-    print_result WARN "Cilium"
-fi
-
-############################################################
-# Hubble
-############################################################
-
-if kubectl get deployment hubble-relay -n kube-system >/dev/null 2>&1; then
-    print_result OK "Hubble"
-else
-    print_result WARN "Hubble"
+    print_result WARN "Flannel"
 fi
 
 ############################################################
@@ -194,7 +198,7 @@ fi
 echo
 echo "-------------------------------------------"
 
-echo "Kubernetes : $(kubectl version --short 2>/dev/null | grep Server | awk '{print $3}')"
+echo "Kubernetes : $(kubectl version -o yaml 2>/dev/null | awk '/gitVersion:/ {print $2; exit}')"
 
 echo "Node(s):"
 kubectl get nodes
