@@ -1,0 +1,9 @@
+speaker:
+  tolerateMaster: true
+
+controller:
+  replicaCount: 1
+
+prometheus:
+  serviceMonitor:
+    enabled: false
