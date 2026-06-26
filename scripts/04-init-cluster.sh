@@ -1,48 +1,43 @@
 #!/usr/bin/env bash
+
 set -euo pipefail
 
 source config.env
+source scripts/lib/common.sh
 
-echo "[INFO] Initialisiere Kubernetes Cluster..."
+log_info "Initialisiere Cluster..."
 
-# Cluster bereits vorhanden?
 if [ -f /etc/kubernetes/admin.conf ]; then
-    echo "[OK] Cluster bereits initialisiert."
+    log_ok "Cluster bereits vorhanden."
     exit 0
 fi
 
-# kubelet muss laufen
-if ! systemctl is-active --quiet kubelet; then
-    echo "[ERROR] kubelet läuft nicht."
-    exit 1
-fi
-
-echo "[INFO] Starte kubeadm..."
-
-sudo kubeadm init \
+kubeadm init \
     --pod-network-cidr="${POD_CIDR}" \
     --upload-certs
 
-echo "[OK] Cluster erstellt."
-
-echo "[INFO] Konfiguriere kubectl..."
-
 mkdir -p "$HOME/.kube"
 
-sudo cp /etc/kubernetes/admin.conf "$HOME/.kube/config"
+cp /etc/kubernetes/admin.conf "$HOME/.kube/config"
 
-sudo chown "$(id -u):$(id -g)" "$HOME/.kube/config"
+chown "$(id -u):$(id -g)" "$HOME/.kube/config"
 
-echo "[INFO] Erzeuge Join Command..."
+wait_for_api
 
-sudo kubeadm token create --print-join-command \
-    | tee join-command.sh
+wait_for_node_ready
+
+kubeadm token create \
+    --print-join-command \
+    > join-command.sh
 
 chmod +x join-command.sh
 
-echo ""
-echo "[OK] Cluster erfolgreich initialisiert."
-echo ""
-echo "Worker können mit folgendem Script beitreten:"
-echo ""
-echo "./join-command.sh"
+if [ "$SINGLE_NODE" = true ]; then
+
+    kubectl taint nodes \
+        --all \
+        node-role.kubernetes.io/control-plane- || true
+
+fi
+
+log_ok "Cluster erfolgreich initialisiert."
