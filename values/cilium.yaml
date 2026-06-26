@@ -1,1 +1,37 @@
+# kube-proxy wird durch Cilium ersetzt
+kubeProxyReplacement: true
 
+# Kubernetes verwaltet die IP-Adressvergabe
+ipam:
+  mode: kubernetes
+
+# Native Routing (empfohlen bei Bare Metal)
+routingMode: native
+
+autoDirectNodeRoutes: true
+
+# Operator
+operator:
+  replicas: 1
+
+# Hubble
+hubble:
+  enabled: true
+
+  relay:
+    enabled: true
+
+  ui:
+    enabled: true
+
+# Monitoring
+prometheus:
+  enabled: true
+
+# Layer7 Proxy
+envoy:
+  enabled: true
+
+l7Proxy: true
+
+rollOutCiliumPods: true
